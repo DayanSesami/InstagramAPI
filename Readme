@@ -1,0 +1,6 @@
+## Steps
+
+1- please install nodeJS (https://nodejs.org/en/download/current)
+2- update .env file values
+2- open the terminal in the project folder
+3- write `node ./index.js`
