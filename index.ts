@@ -1,5 +1,5 @@
-import redis from "redis";
-import mysql from "mysql";
+import * as redis from "redis";
+import * as mysql from "mysql";
 import axios from "axios";
 
 const redisClient = redis.createClient({
