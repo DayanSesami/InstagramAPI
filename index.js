@@ -34,12 +34,12 @@ mySQLClient.connect((err, args) => __awaiter(void 0, void 0, void 0, function* (
     yield redisClient.subscribe(process.env.REDIS_TOPIC, (message, channel) => __awaiter(void 0, void 0, void 0, function* () {
         // TODO: the message that is sent to the queue is a list of ids each time
         // for example ['123', '12', '1']
-        let usersIds = JSON.parse(message);
+        let info = JSON.parse(message);
         let promises = [];
         const usersInformation = [];
-        const usersIdsLength = usersIds.length;
+        const usersIdsLength = info.followers.length;
         while (usersInformation.length !== usersIdsLength) {
-            for (let userId of usersIds) {
+            for (let userId of info.followers) {
                 // TODO: Please check if this is the api we need to call
                 const newPromise = axios_1.default.post("https://v1.rocketapi.io/instagram/user/get_info_by_id", {
                     id: userId,
@@ -57,10 +57,10 @@ mySQLClient.connect((err, args) => __awaiter(void 0, void 0, void 0, function* (
                     usersInformation.push(result[index]["value"]);
                 }
                 else {
-                    newUserIds.push(usersIds[index]);
+                    newUserIds.push(info.followers[index]);
                 }
             }
-            usersIds = newUserIds;
+            info.followers = newUserIds;
         }
         // userIds information is ready to be inserted into database
         promises = [];
@@ -68,7 +68,10 @@ mySQLClient.connect((err, args) => __awaiter(void 0, void 0, void 0, function* (
             promises.push(new Promise((resolve, reject) => {
                 mySQLClient.query(
                 // TODO: please replace this query with you own insert query
-                `insert into table REPLACE_WITH_YOUR_TABLE_NAME values (${userInformation.username})`, function (err, result) {
+                `INSERT INTO \`binro\`.\`user_instagramuser\` (\`pk_id\`, \`username\`, \`full_name\`, \`follower_count\`, \`following_count\`, \`profile_pic_url\`, \`media_count\`, \`biography\`, \`is_private\`, \`is_business\`, \`bio_links\`)
+               VALUES (${userInformation.pk_id}, ${userInformation.username}, ${userInformation.full_name}, ${userInformation.follower_count}, ${userInformation.following_count}, ${userInformation.profile_pic_url}, ${userInformation.media_count}, ${userInformation.biography}, ${userInformation.is_private}, ${userInformation.public_email}, ${userInformation.public_phone_number}, ${userInformation.category}, ${userInformation.is_business}, ${userInformation.bio_links});
+               INSERT INTO \`binro\`.\`user_instagramuser_followers\` (\`${info.user}\`, \`${userInformation.pk_id}\`) VALUES (\'ReportUser\', \'UserFollower\');
+              `, function (err, result) {
                     if (err) {
                         console.log(err);
                     }
